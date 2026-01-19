@@ -1,3 +1,13 @@
+export default function App() {
+  console.log('APP MOUNTED')
+
+  return (
+    <div style={{ width: '100vw', height: '100vh', background: 'green' }}>
+      <h1 style={{ color: 'white' }}>CROWNFALL</h1>
+    </div>
+  )
+}
+
 import { createElement, useState, useCallback } from 'react';
 import htm from 'htm';
 import GameEngine from './game/GameEngine.js';
