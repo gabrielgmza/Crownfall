@@ -1,95 +1,89 @@
 import { createElement, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { MapControls, Sky, Environment, BakeShadows, SoftShadows } from '@react-three/drei';
+import { MapControls, Sky, Environment, BakeShadows } from '@react-three/drei';
 import htm from 'htm';
 import * as THREE from 'three';
 
 const html = htm.bind(createElement);
 
-// --- ASSETS PROCEDURALES ---
+// --- COMPONENTES DEL MUNDO ---
 
-function GrassTile({ position }) {
-    // Variación aleatoria sutil
-    const color = useMemo(() => {
-        const colors = ['#4ade80', '#22c55e', '#16a34a']; // Tailwind green palette
-        return colors[Math.floor(Math.random() * colors.length)];
-    }, []);
-
+function GroundPlane({ size = 100 }) {
     return html`
-        <mesh position=${position} receiveShadow rotation=${[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args=${[1, 1]} />
-            <meshStandardMaterial color=${color} roughness=${1} />
+        <mesh rotation=${[-Math.PI / 2, 0, 0]} receiveShadow position=${[0, -0.01, 0]}>
+            <planeGeometry args=${[size, size]} />
+            <meshStandardMaterial color="#4d7c0f" roughness=${1} />
         </mesh>
     `;
 }
 
-function KeepModel({ position }) {
+function Keep({ position }) {
     return html`
         <group position=${position}>
-            <!-- Base -->
-            <mesh position=${[0, 1, 0]} castShadow receiveShadow>
-                <boxGeometry args=${[3, 2, 3]} />
-                <meshStandardMaterial color="#78716c" />
+            <!-- Base Fuerte -->
+            <mesh position=${[0, 1.5, 0]} castShadow receiveShadow>
+                <boxGeometry args=${[4, 3, 4]} />
+                <meshStandardMaterial color="#57534e" roughness=${0.8} />
             </mesh>
-            <!-- Torre -->
-            <mesh position=${[1, 2.5, 1]} castShadow>
-                <boxGeometry args=${[1, 2, 1]} />
-                <meshStandardMaterial color="#57534e" />
+            <!-- Almenas -->
+            <mesh position=${[1.5, 3.25, 1.5]} castShadow>
+                <boxGeometry args=${[0.8, 0.5, 0.8]} />
+                <meshStandardMaterial color="#44403c" />
             </mesh>
-            <!-- Bandera -->
-            <mesh position=${[1, 4, 1]}>
-                <cylinderGeometry args=${[0.05, 0.05, 2]} />
-                <meshStandardMaterial color="#444" />
+            <mesh position=${[-1.5, 3.25, 1.5]} castShadow>
+                <boxGeometry args=${[0.8, 0.5, 0.8]} />
+                <meshStandardMaterial color="#44403c" />
+            </mesh>
+            <mesh position=${[1.5, 3.25, -1.5]} castShadow>
+                <boxGeometry args=${[0.8, 0.5, 0.8]} />
+                <meshStandardMaterial color="#44403c" />
+            </mesh>
+            <mesh position=${[-1.5, 3.25, -1.5]} castShadow>
+                <boxGeometry args=${[0.8, 0.5, 0.8]} />
+                <meshStandardMaterial color="#44403c" />
+            </mesh>
+            <!-- Bandera Central -->
+            <mesh position=${[0, 4.5, 0]} castShadow>
+                <cylinderGeometry args=${[0.1, 0.1, 3]} />
+                <meshStandardMaterial color="#78350f" />
+            </mesh>
+            <mesh position=${[0.5, 5.5, 0]} rotation=${[0, 0, -0.2]}>
+                <boxGeometry args=${[1, 0.6, 0.05]} />
+                <meshStandardMaterial color="#dc2626" />
             </mesh>
         </group>
     `;
 }
 
-function GameScene({ mapSize = 20 }) {
-    // Generar suelo simple
-    const tiles = useMemo(() => {
-        const t = [];
-        for (let x = -mapSize / 2; x < mapSize / 2; x++) {
-            for (let z = -mapSize / 2; z < mapSize / 2; z++) {
-                t.push({ x, z, id: `${x},${z}` });
-            }
-        }
-        return t;
-    }, [mapSize]);
-
+function GameScene() {
     return html`
         <group>
-            <!-- Luces Ambientales -->
-            <ambientLight intensity=${0.5} />
+            <!-- Iluminación Global -->
+            <ambientLight intensity=${0.6} />
             <directionalLight 
-                position=${[50, 50, 25]} 
+                position=${[20, 30, 10]} 
                 intensity=${1.5} 
                 castShadow 
-                shadow-mapSize=${[1024, 1024]}
-                shadow-bias=${-0.0001}
-            />
-            
-            <!-- Cielo -->
-            <${Sky} sunPosition=${[100, 20, 100]} />
+                shadow-mapSize=${[2048, 2048]}
+                shadow-bias=${-0.0005}
+            >
+                <orthographicCamera attach="shadow-camera" args=${[-30, 30, 30, -30]} />
+            </directionalLight>
+
+            <${Sky} sunPosition=${[100, 20, 100]} turbidity=${8} rayleigh=${6} />
             <${Environment} preset="park" />
 
-            <!-- Mapa -->
-            <group>
-                ${tiles.map(tile => html`
-                    <${GrassTile} key=${tile.id} position=${[tile.x, 0, tile.z]} />
-                `)}
-            </group>
+            <!-- Terreno y Estructuras -->
+            <${GroundPlane} />
+            <${Keep} position=${[0, 0, 0]} />
 
-            <!-- Estructuras Iniciales -->
-            <${KeepModel} position=${[0, 0, 0]} />
-
-            <!-- Controles RTS (MapControls bloquea rotación libre para estilo isométrico) -->
+            <!-- Controles RTS (Estilo Stronghold) -->
             <${MapControls} 
-                enableDamping=${true} 
-                dampingFactor=${0.05} 
-                minDistance=${5} 
-                maxDistance=${40} 
-                maxPolarAngle=${Math.PI / 2.5}
+                screenSpacePanning=${false}
+                minDistance=${10}
+                maxDistance=${60}
+                maxPolarAngle=${Math.PI / 2.2}
+                dampingFactor=${0.05}
             />
         </group>
     `;
@@ -97,15 +91,17 @@ function GameScene({ mapSize = 20 }) {
 
 export default function GameEngine({ settings }) {
     const shadows = settings.quality !== 'low';
-    const dpr = settings.quality === 'high' ? [1, 2] : 1;
-
+    
     return html`
-        <div className="w-full h-full">
+        <div className="w-full h-full bg-black">
             <${Canvas} 
-                shadows=${shadows} 
-                dpr=${dpr}
-                camera=${{ position: [15, 15, 15], fov: 40 }}
-                gl=${{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
+                shadows=${shadows}
+                camera=${{ position: [20, 20, 20], fov: 40 }}
+                gl=${{ 
+                    antialias: true, 
+                    toneMapping: THREE.ACESFilmicToneMapping,
+                    outputColorSpace: THREE.SRGBColorSpace
+                }}
             >
                 <${GameScene} />
                 ${shadows && html`<${BakeShadows} />`}

@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <title>Crownfall: Stronghold</title>
     
-    <!-- CSS Reset & Base -->
     <style>
         body, html { 
             margin: 0; 
@@ -13,17 +12,15 @@
             width: 100%; 
             height: 100%; 
             overflow: hidden; 
-            background-color: #0f172a; /* Slate 900 fallback */
-            font-family: 'Times New Roman', serif; /* Medieval feel fallback */
+            background-color: #0f172a; 
+            font-family: 'Times New Roman', serif;
+            user-select: none;
         }
         #root { width: 100%; height: 100%; }
         canvas { outline: none; -webkit-tap-highlight-color: transparent; }
-        
-        /* Utility classes fallback if Tailwind fails to load */
-        .hidden { display: none; }
     </style>
 
-    <!-- Tailwind CSS (CDN Mode for No-Build Env) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -46,7 +43,7 @@
         }
     </script>
 
-    <!-- Import Map: STRICT VERSION LOCKING -->
+    <!-- Import Map: STRICT VERSION LOCKING (React 18 ONLY) -->
     <script type="importmap">
 {
   "imports": {
